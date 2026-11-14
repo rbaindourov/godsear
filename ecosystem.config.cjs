@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'godsear',
       cwd: '/opt/godsear',
-      script: './node_modules/.bin/tsx',
+      script: './node_modules/tsx/dist/cli.mjs',
       args: 'server/index.ts',
       env: {
         NODE_ENV: 'production',
