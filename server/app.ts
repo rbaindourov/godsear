@@ -39,7 +39,9 @@ export function createApp(options: CreateGodsEarAppOptions = {}) {
   const cache = options.cache || new EphemeralGeoCache(5000, 3 * 60 * 1000);
   const disableExternal = Boolean(options.disableExternalFetch);
 
-  app.get('/api/health', (_req, res) => {
+  const apiRouter = express.Router();
+
+  apiRouter.get('/health', (_req, res) => {
     res.json({
       status: 'ok',
       service: 'godsear',
@@ -49,7 +51,7 @@ export function createApp(options: CreateGodsEarAppOptions = {}) {
     });
   });
 
-  app.get('/api/geocode', async (req, res) => {
+  apiRouter.get('/geocode', async (req, res) => {
     const q = String(req.query.q || '').trim();
     if (!q) {
       res.status(400).json({ error: 'Missing query parameter q' });
@@ -63,7 +65,7 @@ export function createApp(options: CreateGodsEarAppOptions = {}) {
     res.json(found);
   });
 
-  app.get('/api/sweep', async (req, res) => {
+  apiRouter.get('/sweep', async (req, res) => {
     const lat = Number(req.query.lat ?? 34.0522);
     const lon = Number(req.query.lon ?? -118.2437);
     const radiusKm = Math.max(0.25, Math.min(50, Number(req.query.radiusKm ?? 5)));
@@ -182,7 +184,7 @@ export function createApp(options: CreateGodsEarAppOptions = {}) {
     res.json(payload);
   });
 
-  app.get('/api/user-trail', async (req, res) => {
+  apiRouter.get('/user-trail', async (req, res) => {
     const rawHandle = String(req.query.handle || '').trim();
     if (!rawHandle) {
       res.status(400).json({ error: 'Missing handle query parameter' });
@@ -237,7 +239,7 @@ export function createApp(options: CreateGodsEarAppOptions = {}) {
     res.json(response);
   });
 
-  app.post('/api/import', (req, res) => {
+  apiRouter.post('/import', (req, res) => {
     const rawContent = String(req.body?.rawContent || '');
     const defaultHandle = String(req.body?.defaultHandle || 'x_archive_user').trim();
     if (!rawContent.trim()) {
@@ -281,30 +283,47 @@ export function createApp(options: CreateGodsEarAppOptions = {}) {
     });
   });
 
-  app.delete('/api/cache', (_req, res) => {
+  apiRouter.delete('/cache', (_req, res) => {
     cache.clear();
     res.json({ cleared: true, cachedSignals: 0 });
   });
+
+  // Mount API at both /api/godsear (subpath reverse proxy on robertscreations.com & webdesigner.la)
+  // and /api (root reverse proxy on godsear.webdesigner.la)
+  app.use('/api/godsear', apiRouter);
+  app.use('/api', apiRouter);
 
   const publicDir = path.resolve(process.cwd(), 'public');
   const distDir = path.resolve(process.cwd(), 'dist');
 
   if (fs.existsSync(publicDir)) {
-    app.use(express.static(publicDir));
+    app.use('/godsear', express.static(publicDir, { index: false }));
+    app.use(express.static(publicDir, { index: false }));
   }
   if (fs.existsSync(distDir)) {
-    app.use(express.static(distDir));
+    app.use('/godsear', express.static(distDir, { index: false }));
+    app.use(express.static(distDir, { index: false }));
+
     app.use((req, res, next) => {
       if (req.method !== 'GET' || req.path.startsWith('/api/')) {
         next();
         return;
       }
-      const indexHtml = path.join(distDir, 'index.html');
-      if (fs.existsSync(indexHtml)) {
-        res.sendFile(indexHtml);
+      const indexHtmlPath = path.join(distDir, 'index.html');
+      if (!fs.existsSync(indexHtmlPath)) {
+        next();
         return;
       }
-      next();
+      if (req.path === '/godsear' || req.path.startsWith('/godsear/')) {
+        const rawHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
+        const rewritten = rawHtml
+          .replace(/(src|href)="\/assets\//g, '$1="/godsear/assets/')
+          .replace(/href="\/favicon\.svg"/g, 'href="/godsear/favicon.svg"');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.send(rewritten);
+        return;
+      }
+      res.sendFile(indexHtmlPath);
     });
   }
 

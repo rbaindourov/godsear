@@ -62,6 +62,13 @@ flowchart LR
 | `neighborhood` | `NEIGHBORHOOD` | Post matched to a verified district/suburb anchor or X neighborhood bounding box |
 | `city` | `CITY` | City-wide municipal post anchored to the reverse-geocoded municipal center |
 
+## Production Multi-Host Routing (`robertscreations.com/godsear` + `godsear.webdesigner.la`)
+
+Like `ella-world` (`ella_world_standalone.conf`), a single native PM2 Node.js process (`gods-ear` on `127.0.0.1:3012`) serves both subpath and dedicated-subdomain entrypoints without code duplication:
+
+- **`https://robertscreations.com/godsear`** (and **`https://webdesigner.la/godsear`**): Proxied via `/etc/nginx/snippets/godsear_standalone.conf` (`location = /godsear`, `location ^~ /godsear/`, and `location ^~ /api/godsear/`). Express dynamically rewrites `/assets/` and `/favicon.svg` to `/godsear/assets/` and `/godsear/favicon.svg`, and the React client auto-selects `/api/godsear` via `getApiPrefix()`.
+- **`https://godsear.webdesigner.la/`**: Proxied via `/etc/nginx/sites-available/godsear.webdesigner.la` directly to `127.0.0.1:3012` using `/` and `/api/*`.
+
 ## HTTP API Reference
 
 | Endpoint | Method | Purpose |

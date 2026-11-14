@@ -12,6 +12,7 @@ import { TopCommandBar } from './components/TopCommandBar';
 import { InterceptDrawer } from './components/InterceptDrawer';
 import { TimeScrubberBar } from './components/TimeScrubberBar';
 import { ImportAndXModal } from './components/ImportAndXModal';
+import { getApiPrefix } from './utils/apiPrefix';
 import './style.css';
 
 // Default cold-start sector: 3D Street-Level Downtown / Central Los Angeles
@@ -90,7 +91,7 @@ function App() {
           headers['x-twitter-bearer'] = xBearerToken;
         }
 
-        const res = await fetch(`/api/sweep?${params.toString()}`, { headers });
+        const res = await fetch(`${getApiPrefix()}/sweep?${params.toString()}`, { headers });
         if (!res.ok) throw new Error(`Sweep HTTP ${res.status}`);
         const data = (await res.json()) as SweepResponse;
 
@@ -175,7 +176,7 @@ function App() {
       try {
         const params = new URLSearchParams({ handle });
         if (platform) params.set('platform', platform);
-        const res = await fetch(`/api/user-trail?${params.toString()}`);
+        const res = await fetch(`${getApiPrefix()}/user-trail?${params.toString()}`);
         if (!res.ok) throw new Error('Trail lookup failed');
         const data = (await res.json()) as UserTrailResponse;
         if (data.stops.length === 0) {
@@ -206,7 +207,7 @@ function App() {
       }
 
       try {
-        const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`${getApiPrefix()}/geocode?q=${encodeURIComponent(q)}`);
         if (res.ok) {
           const geo = (await res.json()) as { lat: number; lon: number; label: string };
           setActiveTrail(null);

@@ -200,5 +200,19 @@ describe('GodsEar Express API (isolated ephemeral cache)', () => {
     const delRes = await request(app).delete('/api/cache');
     expect(delRes.status).toBe(200);
     expect(delRes.body.cachedSignals).toBe(0);
+
+    // Subpath /api/godsear mount parity (robertscreations.com/godsear)
+    const subHealth = await request(app).get('/api/godsear/health');
+    expect(subHealth.status).toBe(200);
+    expect(subHealth.body.service).toBe('godsear');
+
+    // Negative controls: unlocated import must return 422, invalid coords must return 400
+    const unlocatedRes = await request(app)
+      .post('/api/godsear/import')
+      .send({ rawContent: JSON.stringify([{ id: '1', text: 'No GPS here' }]) });
+    expect(unlocatedRes.status).toBe(422);
+
+    const badSweepRes = await request(app).get('/api/godsear/sweep?lat=999&lon=-118');
+    expect(badSweepRes.status).toBe(400);
   });
 });

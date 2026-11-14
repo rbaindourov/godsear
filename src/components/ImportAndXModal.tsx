@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import type { GeoPost } from '../../server/types';
+import { getApiPrefix } from '../utils/apiPrefix';
 
 interface ImportAndXModalProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export function ImportAndXModal({
     setErrorMsg('');
     setStatusMsg('');
     try {
-      const res = await fetch('/api/import', {
+      const res = await fetch(`${getApiPrefix()}/import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
