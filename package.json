@@ -1,0 +1,36 @@
+{
+  "name": "godsear",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "GodsEar — Real-time 3D Globe-to-Street Geo-Social OSINT Visualization (see who posted/tweeted what, when, and where they physically were).",
+  "scripts": {
+    "dev:api": "tsx watch server/index.ts",
+    "dev:web": "vite",
+    "dev": "concurrently -k \"pnpm run dev:api\" \"pnpm run dev:web\"",
+    "build": "tsc --noEmit && vite build",
+    "start": "tsx server/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "maplibre-gl": "^5.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@types/supertest": "^6.0.3",
+    "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.1.2",
+    "supertest": "^7.1.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.2",
+    "vitest": "^3.1.1"
+  }
+}
